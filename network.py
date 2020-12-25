@@ -42,50 +42,6 @@ class AutoEncoder(torch.nn.Module):
         x = self.output_layer(x)
         return x
 
-def show_torch_image(torch_tensor):
-    plt.imshow(torch_tensor.numpy().reshape(28, 28), cmap='gray')
-    plt.show()
-
-def initialize(trn_x, val_x, trn_y, val_y):
-    trn_x_torch = torch.from_numpy(trn_x).type(torch.FloatTensor)
-    trn_y_torch = torch.from_numpy(trn_y)
-
-    val_x_torch = torch.from_numpy(val_x).type(torch.FloatTensor)
-    val_y_torch = torch.from_numpy(val_y)
-
-    trn = TensorDataset(trn_x_torch,trn_y_torch)
-    val = TensorDataset(val_x_torch,val_y_torch)
-
-    trn_dataloader = torch.utils.data.DataLoader(trn,batch_size=100,shuffle=False, num_workers=4)
-    val_dataloader = torch.utils.data.DataLoader(val,batch_size=100,shuffle=False, num_workers=4)
-
-    return trn_dataloader, val_dataloader
-
-
 if __name__ == "__main__":
     ae = AutoEncoder()
     print(ae)
-
-    loss_func = torch.nn.MSELoss()
-    optimizer = torch.optim.Adam(ae.parameters(), lr = 1e-3)
-    losses = []
-    EPOCHS = 5
-
-    for epoch in range(EPOCHS):
-        for batch_idx, (data, target) in enumerate(trn_dataloader):
-            
-            data = torch.autograd.Variable(data)
-
-            optimizer.zero_grad()
-            pred = ae(data)
-
-            loss = loss_func(pred, data)
-            losses.append(loss.cpu().data.item())
-
-            loss.backward()
-
-            optimizer.step()
-
-            if batch_idx % 100 == 1:
-                print('\r Train Epoch: {}/{} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch+1,EPOCHS,batch_idx * len(data),len(trn_dataloader.dataset),100.*batch_idx/len(trn_dataloader),loss.cpu().data.item()),end='')
-
