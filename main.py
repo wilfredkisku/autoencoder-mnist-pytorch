@@ -28,7 +28,7 @@ def initialize(trn_x, val_x, trn_y, val_y):
     trn_dataloader = torch.utils.data.DataLoader(trn,batch_size=100,shuffle=False, num_workers=4)
     val_dataloader = torch.utils.data.DataLoader(val,batch_size=100,shuffle=False, num_workers=4)
 
-    return trn_x_torch, trn_dataloader, val_dataloader
+    return trn_x_torch, val_x_torch, trn_dataloader, val_dataloader
 
 # Set file paths based on added MNIST Datasets
 input_path = 'data'
@@ -60,12 +60,6 @@ def show_images(images, title_texts):
 mnist_dataloader = ut.MnistDataloader(training_images_filepath, training_labels_filepath, test_images_filepath, test_labels_filepath)
 (x_train, y_train), (x_test, y_test) = mnist_dataloader.load_data()
 
-#print(np.array(x_train).shape)
-#print(np.array(x_test).shape)
-
-#print(np.array(y_train).shape)
-#print(np.array(y_test).shape)
-
 x_train = np.array(x_train)
 X_train = x_train.reshape(x_train.shape[0], -1)
 Y_train = np.array(y_train)
@@ -94,10 +88,9 @@ print(trn_y[0])
 ae = network.AutoEncoder()
 print(ae)
 
-trn_x_torch, trn_dataloader, val_dataloader = initialize(trn_x, val_x, trn_y, val_y)
+trn_x_torch, val_x_torch, trn_dataloader, val_dataloader = initialize(trn_x, val_x, trn_y, val_y)
 show_torch_image(trn_x_torch[1])
 
-'''
 loss_func = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(ae.parameters(), lr = 1e-3)
 losses = []
@@ -119,9 +112,31 @@ for epoch in range(EPOCHS):
         optimizer.step()
 
         if batch_idx % 100 == 1:
-            print('\r Train Epoch: {}/{} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch+1,EPOCHS,batch_idx * len(data),len(trn_dataloader.dataset),100.*batch_idx/len(trn_dataloader),loss.cpu().data.item()),end='')
-'''
+            print('\r Train Epoch: {}/{} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch+1,EPOCHS,batch_idx * len(data),len(trn_dataloader.dataset),100.*batch_idx/len(trn_dataloader),loss.cpu().data.item()/len(trn_dataloader)),end='')
 
+ae.eval()
+predictions = []
+
+for batch_idx, (data,target) in enumerate(val_dataloader):
+        
+        data = torch.autograd.Variable(data)
+
+        pred = ae(data)
+        
+        for prediction in pred:
+            predictions.append(prediction)
+
+len(predictions)
+show_torch_image(val_x_torch[1])
+show_torch_image(predictions[1].detach())
+
+model_weights = []
+model_layers = []
+
+model_children = list(ae.children())
+
+print(model_children[3].weight.data.numpy())
+print(model_children[3].weight.data.numpy().shape)
 # Show some random training and test images 
 '''
 images_2_show = []

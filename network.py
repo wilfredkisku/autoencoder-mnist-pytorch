@@ -1,31 +1,26 @@
 import torch
-#import torch.nn as nn
-#import torch.nn.functional as F
-
-#from torch.autograd import Variable
 
 import pandas as pd
 import numpy as np
 
 from sklearn.model_selection import train_test_split
-#from torch.utils.data import TensorDataset
 import matplotlib.pyplot as plt
 
 class AutoEncoder(torch.nn.Module):
     def __init__(self):
         super(AutoEncoder, self).__init__()
 
-        self.e1 = torch.nn.Linear(784, 392)
-        self.e2 = torch.nn.Linear(392, 196)
-        self.e3 = torch.nn.Linear(196, 98)
+        self.e1 = torch.nn.Linear(784, 400)
+        self.e2 = torch.nn.Linear(400, 256)
+        self.e3 = torch.nn.Linear(256, 100)
 
-        self.lv = torch.nn.Linear(98, 49)
+        self.lv = torch.nn.Linear(100, 64)
         
-        self.d1 = torch.nn.Linear(49, 98)
-        self.d2 = torch.nn.Linear(98, 196)
-        self.d3 = torch.nn.Linear(196, 392)
+        self.d1 = torch.nn.Linear(64, 100)
+        self.d2 = torch.nn.Linear(100, 256)
+        self.d3 = torch.nn.Linear(256, 400)
 
-        self.output_layer = torch.nn.Linear(392, 784) 
+        self.output_layer = torch.nn.Linear(400, 784) 
 
     def forward(self, x):
 
