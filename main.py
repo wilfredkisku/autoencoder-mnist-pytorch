@@ -56,6 +56,40 @@ def show_images(images, title_texts):
         index += 1
     plt.show()
 
+#training the model
+def train(epoch):
+  network.train()
+  for batch_idx, (data, target) in enumerate(trn_dataloader):
+    optimizer.zero_grad()
+    output = network(data)
+    loss = F.nll_loss(output, target)
+    loss.backward()
+    optimizer.step()
+    if batch_idx % log_interval == 0:
+      print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data), len(trn_dataloader.dataset),100. * batch_idx / len(trn_dataloader), loss.item()))
+      train_losses.append(loss.item())
+      train_counter.append((batch_idx*64) + ((epoch-1)*len(trn_dataloader.dataset)))
+      torch.save(network.state_dict(), 'models/model.pth')
+      torch.save(optimizer.state_dict(), 'models/optimizer.pth')
+
+#testing the model
+def test():
+  network.eval()
+  test_loss = 0
+  correct = 0
+  with torch.no_grad():
+    for data, target in val_dataloader:
+      output = network(data)
+      test_loss += F.nll_loss(output, target, size_average=False).item()
+      pred = output.data.max(1, keepdim=True)[1]
+      correct += pred.eq(target.data.view_as(pred)).sum()
+  test_loss /= len(val_dataloader.dataset)
+  test_losses.append(test_loss)
+  print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(test_loss, correct, len(val_dataloader.dataset), 100. * correct / len(val_dataloader.dataset)))
+
+###########################################################################
+###########################################################################
+###########################################################################
 # Load MINST dataset
 mnist_dataloader = ut.MnistDataloader(training_images_filepath, training_labels_filepath, test_images_filepath, test_labels_filepath)
 (x_train, y_train), (x_test, y_test) = mnist_dataloader.load_data()
@@ -72,20 +106,16 @@ X_test = x_test.reshape(x_test.shape[0], -1)
 
 trn_x,val_x,trn_y,val_y = train_test_split(X_train, Y_train, test_size=0.20)
 
-#print(trn_x.shape)
-#print(val_x.shape)
-
-#print(trn_y.shape)
-#print(val_y.shape)
-
-#plt.imshow(trn_x[0].reshape(28,-1), cmap='gray')
-#plt.show()
-#print(trn_y[0])
+####################################################################################
+####################################################################################
+####################################################################################
 
 ae = network.AutoEncoder()
 print(ae)
 
 trn_x_torch, val_x_torch, trn_dataloader, val_dataloader = initialize(trn_x, val_x, trn_y, val_y)
+
+'''
 show_torch_image(trn_x_torch[1])
 
 loss_func = torch.nn.MSELoss()
@@ -138,34 +168,20 @@ model_children = list(ae.children())
 print(np.array(model_children).shape)
 
 '''
-def train(epoch):
-  network.train()
-  for batch_idx, (data, target) in enumerate(train_loader):
-    optimizer.zero_grad()
-    output = network(data)
-    loss = F.nll_loss(output, target)
-    loss.backward()
-    optimizer.step()
-    if batch_idx % log_interval == 0:
-      print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data), len(train_loader.dataset),100. * batch_idx / len(train_loader), loss.item()))
-      train_losses.append(loss.item())
-      train_counter.append((batch_idx*64) + ((epoch-1)*len(train_loader.dataset)))
-      torch.save(network.state_dict(), 'models/model.pth')
-      torch.save(optimizer.state_dict(), 'models/optimizer.pth')
 
 def test():
   network.eval()
   test_loss = 0
   correct = 0
   with torch.no_grad():
-    for data, target in test_loader:
+    for data, target in val_dataloader:
       output = network(data)
       test_loss += F.nll_loss(output, target, size_average=False).item()
       pred = output.data.max(1, keepdim=True)[1]
       correct += pred.eq(target.data.view_as(pred)).sum()
-  test_loss /= len(test_loader.dataset)
+  test_loss /= len(val_dataloader.dataset)
   test_losses.append(test_loss)
-  print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(test_loss, correct, len(test_loader.dataset), 100. * correct / len(test_loader.dataset)))
+  print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(test_loss, correct, len(val_dataloader.dataset), 100. * correct / len(val_dataloader.dataset)))
 
 n_epochs = 3
 batch_size_train = 64
@@ -189,8 +205,6 @@ test()
 for epoch in range(1, n_epochs + 1):
   train(epoch)
   test()
-
-'''
 
 '''
 # Show some random training and test images 
