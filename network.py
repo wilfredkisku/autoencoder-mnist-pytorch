@@ -28,15 +28,13 @@ class AutoEncoder(torch.nn.Module):
         x = torch.nn.functional.relu(self.e2(x))
         x = torch.nn.functional.relu(self.e3(x))
 
-        #x = torch.sigmoid(self.lv(x))
-
         x = torch.nn.functional.relu(self.d1(x))
         x = torch.nn.functional.relu(self.d2(x))
         x = torch.nn.functional.relu(self.d3(x))
         
         x = self.output_layer(x)
         
-        return torch.nn.Functional.log_softmax(x)
+        return torch.nn.functional.log_softmax(x)
 
 if __name__ == "__main__":
     ae = AutoEncoder()
